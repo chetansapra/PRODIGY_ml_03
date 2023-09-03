@@ -1,0 +1,46 @@
+import os
+import cv2
+import numpy as np
+from sklearn import svm
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, accuracy_score
+
+cat_dir = "path/to/cat_images/"
+dog_dir = "path/to/dog_images/"
+
+def load_images(directory, label):
+    images = []
+    labels = []
+    for filename in os.listdir(directory):
+        if filename.endswith(".jpg"):
+            img = cv2.imread(os.path.join(directory, filename))
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+            img = cv2.resize(img, (128, 128))  
+            images.append(img.flatten())  
+            labels.append(label)
+    return images, labels
+
+cat_images, cat_labels = load_images(cat_dir, 0)  
+dog_images, dog_labels = load_images(dog_dir, 1)  
+
+X = np.vstack((cat_images, dog_images))
+y = np.hstack((cat_labels, dog_labels))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+svm_classifier = svm.SVC(kernel='linear')
+
+
+svm_classifier.fit(X_train, y_train)
+
+
+y_pred = svm_classifier.predict(X_test)
+
+
+accuracy = accuracy_score(y_test, y_pred)
+classification_report_str = classification_report(y_test, y_pred, target_names=["Cat", "Dog"])
+
+print(f"Accuracy: {accuracy}")
+print("Classification Report:")
+print(classification_report_str)
